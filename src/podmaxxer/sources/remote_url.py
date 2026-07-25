@@ -3,6 +3,7 @@ from __future__ import annotations
 import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
+from urllib.parse import urlparse
 
 import requests
 import trafilatura
@@ -11,6 +12,7 @@ from podmaxxer.content import (
     Content,
     ContentKind,
     detect_kind_from_content_type,
+    detect_kind_from_suffix,
     hash_bytes,
     hash_text,
 )
@@ -31,14 +33,21 @@ class UrlSource:
             raise FetchError(f"Failed to fetch {self.url}: HTTP {response.status_code}")
 
         content_type = response.headers.get("Content-Type", "")
-        kind = detect_kind_from_content_type(content_type)
+        kind = self._detect_kind(content_type)
 
         if kind is ContentKind.AUDIO_VIDEO:
             return self._audio_video_content(response.content)
         return self._text_content(response.text, content_type)
 
+    def _detect_kind(self, content_type: str) -> ContentKind:
+        try:
+            return detect_kind_from_content_type(content_type)
+        except UnsupportedContentError:
+            suffix = Path(urlparse(self.url).path).suffix
+            return detect_kind_from_suffix(suffix)
+
     def _audio_video_content(self, data: bytes) -> Content:
-        suffix = Path(self.url).suffix or ".media"
+        suffix = Path(urlparse(self.url).path).suffix or ".media"
         with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
             tmp.write(data)
             tmp_path = tmp.name
@@ -47,6 +56,7 @@ class UrlSource:
             source_uri=self.url,
             content_hash=hash_bytes(data),
             path=Path(tmp_path),
+            is_temp=True,
         )
 
     def _text_content(self, raw_text: str, content_type: str) -> Content:

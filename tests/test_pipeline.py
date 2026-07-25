@@ -40,3 +40,47 @@ def test_process_skips_summarize_call_when_already_cached(monkeypatch, tmp_path)
     pipeline.process(FakeSource(content), conn, api_key="sk-test", template_path=template_path)
 
     assert len(calls) == 1
+
+
+def test_process_deletes_temp_file_after_use(monkeypatch, tmp_path):
+    conn = connect(":memory:")
+    media_path = tmp_path / "episode.mp3"
+    media_path.write_bytes(b"audio")
+    content = Content(
+        kind=ContentKind.AUDIO_VIDEO,
+        source_uri="https://example.com/episode.mp3",
+        content_hash="h1",
+        path=media_path,
+        is_temp=True,
+    )
+    template_path = tmp_path / "tmpl.txt"
+    template_path.write_text("Focus on X.", encoding="utf-8")
+
+    monkeypatch.setattr(pipeline, "get_transcript", lambda content: ("transcript text", "whisper"))
+    monkeypatch.setattr(pipeline, "summarize", lambda template, transcript, api_key: "SUMMARY")
+
+    pipeline.process(FakeSource(content), conn, api_key="sk-test", template_path=template_path)
+
+    assert not media_path.exists()
+
+
+def test_process_does_not_delete_non_temp_file(monkeypatch, tmp_path):
+    conn = connect(":memory:")
+    media_path = tmp_path / "episode.mp3"
+    media_path.write_bytes(b"audio")
+    content = Content(
+        kind=ContentKind.AUDIO_VIDEO,
+        source_uri="/local/episode.mp3",
+        content_hash="h1",
+        path=media_path,
+        is_temp=False,
+    )
+    template_path = tmp_path / "tmpl.txt"
+    template_path.write_text("Focus on X.", encoding="utf-8")
+
+    monkeypatch.setattr(pipeline, "get_transcript", lambda content: ("transcript text", "whisper"))
+    monkeypatch.setattr(pipeline, "summarize", lambda template, transcript, api_key: "SUMMARY")
+
+    pipeline.process(FakeSource(content), conn, api_key="sk-test", template_path=template_path)
+
+    assert media_path.exists()

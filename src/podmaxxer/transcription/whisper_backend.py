@@ -4,6 +4,8 @@ from pathlib import Path
 
 from faster_whisper import WhisperModel
 
+from podmaxxer.errors import TranscriptionError
+
 _MODEL_CACHE: dict[str, WhisperModel] = {}
 
 
@@ -14,6 +16,9 @@ def _get_model(model_size: str) -> WhisperModel:
 
 
 def transcribe(path: Path, model_size: str = "base") -> str:
-    model = _get_model(model_size)
-    segments, _info = model.transcribe(str(path))
-    return " ".join(segment.text.strip() for segment in segments)
+    try:
+        model = _get_model(model_size)
+        segments, _info = model.transcribe(str(path))
+        return " ".join(segment.text.strip() for segment in segments)
+    except Exception as exc:
+        raise TranscriptionError(f"Whisper transcription failed for {path}: {exc}") from exc

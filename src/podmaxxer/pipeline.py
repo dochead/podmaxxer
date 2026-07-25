@@ -19,10 +19,14 @@ def process(
     content = source.fetch()
     repository.upsert_item(conn, content.content_hash, content.kind.value, content.source_uri)
 
-    transcript = repository.get_transcript(conn, content.content_hash)
-    if transcript is None:
-        transcript, transcript_source = get_transcript(content)
-        repository.save_transcript(conn, content.content_hash, transcript, transcript_source)
+    try:
+        transcript = repository.get_transcript(conn, content.content_hash)
+        if transcript is None:
+            transcript, transcript_source = get_transcript(content)
+            repository.save_transcript(conn, content.content_hash, transcript, transcript_source)
+    finally:
+        if content.is_temp and content.path is not None:
+            content.path.unlink(missing_ok=True)
 
     template_text, template_hash = load_template(template_path)
 

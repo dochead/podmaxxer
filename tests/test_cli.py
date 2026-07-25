@@ -2,6 +2,7 @@ from click.testing import CliRunner
 
 from podmaxxer import cli as cli_module
 from podmaxxer.errors import PodmaxxerError
+from podmaxxer.state.db import connect
 
 
 def test_file_command_prints_summary(monkeypatch, tmp_path):
@@ -9,7 +10,7 @@ def test_file_command_prints_summary(monkeypatch, tmp_path):
     path.write_text("hello", encoding="utf-8")
 
     monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
-    monkeypatch.setattr(cli_module, "connect", lambda db_path: "fake-conn")
+    monkeypatch.setattr(cli_module, "connect", lambda db_path: connect(":memory:"))
     monkeypatch.setattr(cli_module, "process", lambda source, conn, api_key, template_path=None: "the summary")
 
     runner = CliRunner()
@@ -36,7 +37,7 @@ def test_pipeline_error_reported_on_stderr_with_nonzero_exit(monkeypatch, tmp_pa
     path.write_text("hello", encoding="utf-8")
 
     monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
-    monkeypatch.setattr(cli_module, "connect", lambda db_path: "fake-conn")
+    monkeypatch.setattr(cli_module, "connect", lambda db_path: connect(":memory:"))
 
     def raise_error(source, conn, api_key, template_path=None):
         raise PodmaxxerError("boom")
@@ -52,7 +53,7 @@ def test_pipeline_error_reported_on_stderr_with_nonzero_exit(monkeypatch, tmp_pa
 
 def test_url_command_invokes_pipeline(monkeypatch):
     monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
-    monkeypatch.setattr(cli_module, "connect", lambda db_path: "fake-conn")
+    monkeypatch.setattr(cli_module, "connect", lambda db_path: connect(":memory:"))
     monkeypatch.setattr(cli_module, "process", lambda source, conn, api_key, template_path=None: "url summary")
 
     runner = CliRunner()

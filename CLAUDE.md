@@ -12,12 +12,16 @@ SQLite-backed resumability. RSS feed and YouTube input are not yet implemented.
 
 ```bash
 uv sync                 # install/sync dependencies
-uv run pytest            # run the test suite
-uv run pytest -m "not slow"   # skip the real-Whisper integration test
+uv run pytest            # run the test suite (faster-whisper is mocked, no real model download)
 uv run ruff check .      # lint
 uv run podmaxxer file <path> [--template <path>]
 uv run podmaxxer url <url> [--template <path>]
 ```
+
+`uv run ruff check .` also runs automatically as a git pre-commit hook (wired into the
+beads-managed hook at `../.beads/hooks/pre-commit`, outside its marker block, guarded on
+`pyproject.toml` existing) — a commit with lint errors is rejected unless `git commit --no-verify`
+is used.
 
 ### Architecture
 

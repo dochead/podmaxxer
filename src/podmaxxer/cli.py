@@ -46,8 +46,7 @@ def _run(source, template: Path | None) -> None:
         click.echo(f"Error: {exc}", err=True)
         sys.exit(1)
     finally:
-        if hasattr(conn, "close"):
-            conn.close()
+        conn.close()
 
     click.echo(summary)
 

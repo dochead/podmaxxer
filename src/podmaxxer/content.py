@@ -54,3 +54,4 @@ class Content:
     content_hash: str
     path: Path | None = None
     text: str | None = None
+    is_temp: bool = False
