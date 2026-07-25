@@ -1,0 +1,9 @@
+You are summarizing a transcript for someone who wants the key points quickly.
+
+Write a concise summary that includes:
+- The main topic(s) discussed
+- Key takeaways or arguments
+- Any notable facts, figures, or recommendations mentioned
+
+Keep the summary under 300 words. Use plain prose or short bullet points, whichever fits the
+content better.
