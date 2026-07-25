@@ -46,4 +46,4 @@ def test_hash_bytes_is_deterministic():
 
 
 def test_hash_text_matches_hash_bytes_utf8():
-    assert hash_text("hello") == hash_bytes("hello".encode("utf-8"))
+    assert hash_text("hello") == hash_bytes(b"hello")

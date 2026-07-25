@@ -1,4 +1,3 @@
-from pathlib import Path
 
 from podmaxxer.content import Content, ContentKind
 from podmaxxer.transcription import base as transcription_base

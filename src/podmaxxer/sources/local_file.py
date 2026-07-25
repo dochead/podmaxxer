@@ -5,7 +5,13 @@ from pathlib import Path
 
 import trafilatura
 
-from podmaxxer.content import Content, ContentKind, detect_kind_from_suffix, hash_bytes, hash_text
+from podmaxxer.content import (
+    Content,
+    ContentKind,
+    detect_kind_from_suffix,
+    hash_bytes,
+    hash_text,
+)
 from podmaxxer.errors import UnsupportedContentError
 
 

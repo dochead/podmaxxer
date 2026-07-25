@@ -7,7 +7,13 @@ from pathlib import Path
 import requests
 import trafilatura
 
-from podmaxxer.content import Content, ContentKind, detect_kind_from_content_type, hash_bytes, hash_text
+from podmaxxer.content import (
+    Content,
+    ContentKind,
+    detect_kind_from_content_type,
+    hash_bytes,
+    hash_text,
+)
 from podmaxxer.errors import FetchError, UnsupportedContentError
 
 
@@ -33,14 +39,14 @@ class UrlSource:
 
     def _audio_video_content(self, data: bytes) -> Content:
         suffix = Path(self.url).suffix or ".media"
-        tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
-        tmp.write(data)
-        tmp.close()
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+            tmp.write(data)
+            tmp_path = tmp.name
         return Content(
             kind=ContentKind.AUDIO_VIDEO,
             source_uri=self.url,
             content_hash=hash_bytes(data),
-            path=Path(tmp.name),
+            path=Path(tmp_path),
         )
 
     def _text_content(self, raw_text: str, content_type: str) -> Content:

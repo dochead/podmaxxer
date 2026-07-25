@@ -32,7 +32,7 @@ def detect_kind_from_suffix(suffix: str) -> ContentKind:
 
 def detect_kind_from_content_type(content_type: str) -> ContentKind:
     normalized = content_type.split(";")[0].strip().lower()
-    if normalized.startswith("audio/") or normalized.startswith("video/"):
+    if normalized.startswith(("audio/", "video/")):
         return ContentKind.AUDIO_VIDEO
     if normalized in ("text/html", "text/plain"):
         return ContentKind.TEXT

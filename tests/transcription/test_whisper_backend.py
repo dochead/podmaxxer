@@ -1,7 +1,6 @@
 from dataclasses import dataclass
-from pathlib import Path
 
-import podmaxxer.transcription.whisper_backend as whisper_backend
+from podmaxxer.transcription import whisper_backend
 
 
 @dataclass

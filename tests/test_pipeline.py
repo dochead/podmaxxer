@@ -1,6 +1,6 @@
+from podmaxxer import pipeline
 from podmaxxer.content import Content, ContentKind
 from podmaxxer.state.db import connect
-from podmaxxer import pipeline
 
 
 class FakeSource:
