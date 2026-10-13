@@ -11,7 +11,9 @@ def test_file_command_prints_summary(monkeypatch, tmp_path):
 
     monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
     monkeypatch.setattr(cli_module, "connect", lambda db_path: connect(":memory:"))
-    monkeypatch.setattr(cli_module, "process", lambda source, conn, api_key, template_path=None: "the summary")
+    monkeypatch.setattr(
+        cli_module, "process", lambda source, conn, api_key, template_path=None: "the summary"
+    )
 
     runner = CliRunner()
     result = runner.invoke(cli_module.cli, ["file", str(path)])
@@ -54,7 +56,9 @@ def test_pipeline_error_reported_on_stderr_with_nonzero_exit(monkeypatch, tmp_pa
 def test_url_command_invokes_pipeline(monkeypatch):
     monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
     monkeypatch.setattr(cli_module, "connect", lambda db_path: connect(":memory:"))
-    monkeypatch.setattr(cli_module, "process", lambda source, conn, api_key, template_path=None: "url summary")
+    monkeypatch.setattr(
+        cli_module, "process", lambda source, conn, api_key, template_path=None: "url summary"
+    )
 
     runner = CliRunner()
     result = runner.invoke(cli_module.cli, ["url", "https://example.com/a.mp3"])

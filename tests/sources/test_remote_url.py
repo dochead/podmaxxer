@@ -32,6 +32,7 @@ def test_fetch_html_extracts_article_text(monkeypatch):
     )
 
     import podmaxxer.sources.remote_url as remote_url_module
+
     monkeypatch.setattr(remote_url_module.trafilatura, "extract", lambda raw: "Real article text.")
 
     content = UrlSource(url="https://example.com/article").fetch()

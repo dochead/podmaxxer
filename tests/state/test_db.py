@@ -3,10 +3,7 @@ from podmaxxer.state.db import connect
 
 def test_connect_creates_expected_tables():
     conn = connect(":memory:")
-    tables = {
-        row[0]
-        for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
-    }
+    tables = {row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
     assert {"items", "transcripts", "summaries"} <= tables
     conn.close()
 

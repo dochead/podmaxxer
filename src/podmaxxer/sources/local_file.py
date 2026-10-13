@@ -9,7 +9,7 @@ from podmaxxer.content import (
     Content,
     ContentKind,
     detect_kind_from_suffix,
-    hash_bytes,
+    hash_file,
     hash_text,
 )
 from podmaxxer.errors import UnsupportedContentError
@@ -22,11 +22,10 @@ class LocalFileSource:
     def fetch(self) -> Content:
         kind = detect_kind_from_suffix(self.path.suffix)
         if kind is ContentKind.AUDIO_VIDEO:
-            data = self.path.read_bytes()
             return Content(
                 kind=kind,
                 source_uri=str(self.path),
-                content_hash=hash_bytes(data),
+                content_hash=hash_file(self.path),
                 path=self.path,
             )
         text = self._read_text()

@@ -6,7 +6,7 @@ from pathlib import Path
 
 import click
 
-from podmaxxer.config import get_state_db_path
+from podmaxxer.config import get_state_db_path, uses_default_openai
 from podmaxxer.errors import PodmaxxerError
 from podmaxxer.pipeline import process
 from podmaxxer.sources.local_file import LocalFileSource
@@ -35,8 +35,11 @@ def url_command(url: str, template: Path | None) -> None:
 
 def _run(source, template: Path | None) -> None:
     api_key = os.environ.get("OPENAI_API_KEY")
-    if not api_key:
-        click.echo("Error: OPENAI_API_KEY environment variable is not set.", err=True)
+    if not api_key and uses_default_openai():
+        click.echo(
+            "Error: OPENAI_API_KEY is not set (or set PODMAXXER_OPENAI_BASE_URL for a local model).",
+            err=True,
+        )
         sys.exit(1)
 
     conn = connect(get_state_db_path())

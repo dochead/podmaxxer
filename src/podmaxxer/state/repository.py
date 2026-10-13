@@ -3,7 +3,9 @@ from __future__ import annotations
 import sqlite3
 
 
-def upsert_item(conn: sqlite3.Connection, content_hash: str, source_kind: str, source_uri: str) -> None:
+def upsert_item(
+    conn: sqlite3.Connection, content_hash: str, source_kind: str, source_uri: str
+) -> None:
     conn.execute(
         "INSERT OR IGNORE INTO items (content_hash, source_kind, source_uri) VALUES (?, ?, ?)",
         (content_hash, source_kind, source_uri),
@@ -34,7 +36,9 @@ def get_summary(conn: sqlite3.Connection, content_hash: str, template_hash: str)
     return row[0] if row else None
 
 
-def save_summary(conn: sqlite3.Connection, content_hash: str, template_hash: str, summary_text: str) -> None:
+def save_summary(
+    conn: sqlite3.Connection, content_hash: str, template_hash: str, summary_text: str
+) -> None:
     conn.execute(
         "INSERT OR REPLACE INTO summaries (content_hash, template_hash, summary_text) VALUES (?, ?, ?)",
         (content_hash, template_hash, summary_text),

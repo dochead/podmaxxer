@@ -22,6 +22,7 @@ def test_fetch_html_file_extracts_article_text(tmp_path, monkeypatch):
     path.write_text("<html><body><p>Real article text.</p></body></html>", encoding="utf-8")
 
     import podmaxxer.sources.local_file as local_file_module
+
     monkeypatch.setattr(local_file_module.trafilatura, "extract", lambda raw: "Real article text.")
 
     content = LocalFileSource(path=path).fetch()
@@ -35,6 +36,7 @@ def test_fetch_html_file_raises_if_extraction_fails(tmp_path, monkeypatch):
     path.write_text("<html></html>", encoding="utf-8")
 
     import podmaxxer.sources.local_file as local_file_module
+
     monkeypatch.setattr(local_file_module.trafilatura, "extract", lambda raw: None)
 
     with pytest.raises(UnsupportedContentError):

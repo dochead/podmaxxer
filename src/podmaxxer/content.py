@@ -14,8 +14,15 @@ class ContentKind(str, Enum):
 
 
 AUDIO_VIDEO_EXTENSIONS = {
-    ".mp3", ".wav", ".m4a", ".flac", ".ogg",
-    ".mp4", ".mov", ".mkv", ".webm",
+    ".mp3",
+    ".wav",
+    ".m4a",
+    ".flac",
+    ".ogg",
+    ".mp4",
+    ".mov",
+    ".mkv",
+    ".webm",
 }
 TEXT_EXTENSIONS = {".txt", ".md"}
 HTML_EXTENSIONS = {".html", ".htm"}
@@ -41,6 +48,14 @@ def detect_kind_from_content_type(content_type: str) -> ContentKind:
 
 def hash_bytes(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
+
+
+def hash_file(path: Path, chunk_size: int = 1 << 20) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as f:
+        while chunk := f.read(chunk_size):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def hash_text(text: str) -> str:

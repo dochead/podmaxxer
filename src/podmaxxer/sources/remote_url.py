@@ -13,7 +13,7 @@ from podmaxxer.content import (
     ContentKind,
     detect_kind_from_content_type,
     detect_kind_from_suffix,
-    hash_bytes,
+    hash_file,
     hash_text,
 )
 from podmaxxer.errors import FetchError, UnsupportedContentError
@@ -26,7 +26,7 @@ class UrlSource:
 
     def fetch(self) -> Content:
         try:
-            response = self.session.get(self.url, timeout=60)
+            response = self.session.get(self.url, timeout=60, stream=True)
         except requests.RequestException as exc:
             raise FetchError(f"Failed to fetch {self.url}: {exc}") from exc
         if response.status_code != 200:
@@ -36,7 +36,7 @@ class UrlSource:
         kind = self._detect_kind(content_type)
 
         if kind is ContentKind.AUDIO_VIDEO:
-            return self._audio_video_content(response.content)
+            return self._audio_video_content(response)
         return self._text_content(response.text, content_type)
 
     def _detect_kind(self, content_type: str) -> ContentKind:
@@ -46,16 +46,21 @@ class UrlSource:
             suffix = Path(urlparse(self.url).path).suffix
             return detect_kind_from_suffix(suffix)
 
-    def _audio_video_content(self, data: bytes) -> Content:
+    def _audio_video_content(self, response: requests.Response) -> Content:
         suffix = Path(urlparse(self.url).path).suffix or ".media"
         with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-            tmp.write(data)
-            tmp_path = tmp.name
+            tmp_path = Path(tmp.name)
+            try:
+                for chunk in response.iter_content(chunk_size=1 << 20):
+                    tmp.write(chunk)
+            except requests.RequestException as exc:
+                tmp_path.unlink(missing_ok=True)
+                raise FetchError(f"Failed while downloading {self.url}: {exc}") from exc
         return Content(
             kind=ContentKind.AUDIO_VIDEO,
             source_uri=self.url,
-            content_hash=hash_bytes(data),
-            path=Path(tmp_path),
+            content_hash=hash_file(tmp_path),
+            path=tmp_path,
             is_temp=True,
         )
 
