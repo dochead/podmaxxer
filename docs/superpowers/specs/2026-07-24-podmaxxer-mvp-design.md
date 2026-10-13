@@ -139,3 +139,10 @@ Recorded as lightweight ADRs under `docs/decisions/`, one file per notable decis
 - YouTube support — likely its own `Source` plus a captions-fetch strategy.
 - Retry/backoff policy for transient network/API failures.
 - Config file location and precedence rules once more settings exist beyond the state DB path.
+- Known limitation (found in MVP code review): `UrlSource.fetch()` always re-downloads before the
+  content hash can be computed, so re-running on an already-fully-cached URL still re-fetches over
+  the network (though the local temp file is now cleaned up immediately after use, so it no longer
+  leaks). Avoiding the re-download would require the `Source` protocol to expose a cheap
+  identify-before-fetch step (e.g. HTTP ETag/If-None-Match, or trusting `source_uri` as a stable
+  key) — deferred since it's a protocol-level change and download cost isn't yet a problem without
+  RSS/batch mode.
