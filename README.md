@@ -4,7 +4,7 @@ A stateful CLI that downloads podcasts, articles, or videos and produces a summa
 
 ## Install
 
-Requires [uv](https://docs.astral.sh/uv/).
+Requires [uv](https://docs.astral.sh/uv/) and Python 3.14 (uv will fetch it).
 
 ```bash
 uv sync
@@ -36,10 +36,23 @@ should focus on.
 
 ## Configuration
 
-| Variable              | Purpose                                              | Default                          |
-|------------------------|-------------------------------------------------------|-----------------------------------|
-| `OPENAI_API_KEY`       | Required. API key used to call OpenAI for summarization. | none (errors if unset)        |
-| `PODMAXXER_STATE_DB`   | Path to the SQLite state database.                    | OS-appropriate user data dir (via `platformdirs`) |
+| Variable                    | Purpose                                                        | Default                                   |
+|-----------------------------|----------------------------------------------------------------|-------------------------------------------|
+| `OPENAI_API_KEY`            | API key for the summarization endpoint. Not needed for local endpoints. | none (required for api.openai.com) |
+| `PODMAXXER_MODEL`           | Chat model used for summaries.                                 | `gpt-6-luna` (cheapest current OpenAI model) |
+| `PODMAXXER_OPENAI_BASE_URL` | Any OpenAI-compatible endpoint, e.g. Ollama `http://localhost:11434/v1`. | `https://api.openai.com/v1`   |
+| `PODMAXXER_WHISPER_MODEL`   | faster-whisper model size (`tiny`, `base`, `small`, `medium`, `large-v3`). | `small`                       |
+| `PODMAXXER_STATE_DB`        | Path to the SQLite state database.                             | OS user data dir (via `platformdirs`)     |
+
+### Running fully local (no per-use cost)
+
+Transcription always runs locally via faster-whisper. To summarize locally too, point at an
+OpenAI-compatible local server:
+
+```bash
+PODMAXXER_OPENAI_BASE_URL=http://localhost:11434/v1 PODMAXXER_MODEL=llama3.2 \
+  uv run podmaxxer file episode.mp3
+```
 
 ## Statefulness
 
@@ -52,6 +65,7 @@ a content hash. Re-running the same input skips any stage already completed.
 uv sync
 uv run pytest
 uv run ruff check .
+uv run basedpyright
 ```
 
 See `docs/superpowers/specs/` for design specs and `docs/decisions/` for architecture decision
@@ -62,3 +76,5 @@ records (ADRs) explaining the "why" behind notable choices.
 Supports local file and direct-URL input for audio/video and text-article content. RSS feed input
 and YouTube-specific handling are planned but not yet implemented — see the MVP design spec for
 details.
+
+See `docs/review-2026-10.md` for known limitations and the roadmap.
