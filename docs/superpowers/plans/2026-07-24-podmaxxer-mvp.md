@@ -258,8 +258,15 @@ class ContentKind(str, Enum):
 
 
 AUDIO_VIDEO_EXTENSIONS = {
-    ".mp3", ".wav", ".m4a", ".flac", ".ogg",
-    ".mp4", ".mov", ".mkv", ".webm",
+    ".mp3",
+    ".wav",
+    ".m4a",
+    ".flac",
+    ".ogg",
+    ".mp4",
+    ".mov",
+    ".mkv",
+    ".webm",
 }
 TEXT_EXTENSIONS = {".txt", ".md"}
 HTML_EXTENSIONS = {".html", ".htm"}
@@ -336,10 +343,7 @@ from podmaxxer.state.db import connect
 
 def test_connect_creates_expected_tables():
     conn = connect(":memory:")
-    tables = {
-        row[0]
-        for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
-    }
+    tables = {row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
     assert {"items", "transcripts", "summaries"} <= tables
     conn.close()
 
@@ -477,7 +481,9 @@ from __future__ import annotations
 import sqlite3
 
 
-def upsert_item(conn: sqlite3.Connection, content_hash: str, source_kind: str, source_uri: str) -> None:
+def upsert_item(
+    conn: sqlite3.Connection, content_hash: str, source_kind: str, source_uri: str
+) -> None:
     conn.execute(
         "INSERT OR IGNORE INTO items (content_hash, source_kind, source_uri) VALUES (?, ?, ?)",
         (content_hash, source_kind, source_uri),
@@ -508,7 +514,9 @@ def get_summary(conn: sqlite3.Connection, content_hash: str, template_hash: str)
     return row[0] if row else None
 
 
-def save_summary(conn: sqlite3.Connection, content_hash: str, template_hash: str, summary_text: str) -> None:
+def save_summary(
+    conn: sqlite3.Connection, content_hash: str, template_hash: str, summary_text: str
+) -> None:
     conn.execute(
         "INSERT OR REPLACE INTO summaries (content_hash, template_hash, summary_text) VALUES (?, ?, ?)",
         (content_hash, template_hash, summary_text),
@@ -587,6 +595,7 @@ def test_fetch_html_file_extracts_article_text(tmp_path, monkeypatch):
     path.write_text("<html><body><p>Real article text.</p></body></html>", encoding="utf-8")
 
     import podmaxxer.sources.local_file as local_file_module
+
     monkeypatch.setattr(local_file_module.trafilatura, "extract", lambda raw: "Real article text.")
 
     content = LocalFileSource(path=path).fetch()
@@ -600,6 +609,7 @@ def test_fetch_html_file_raises_if_extraction_fails(tmp_path, monkeypatch):
     path.write_text("<html></html>", encoding="utf-8")
 
     import podmaxxer.sources.local_file as local_file_module
+
     monkeypatch.setattr(local_file_module.trafilatura, "extract", lambda raw: None)
 
     with pytest.raises(UnsupportedContentError):
@@ -732,6 +742,7 @@ def test_fetch_html_extracts_article_text(monkeypatch):
     )
 
     import podmaxxer.sources.remote_url as remote_url_module
+
     monkeypatch.setattr(remote_url_module.trafilatura, "extract", lambda raw: "Real article text.")
 
     content = UrlSource(url="https://example.com/article").fetch()
@@ -790,7 +801,13 @@ from pathlib import Path
 import requests
 import trafilatura
 
-from podmaxxer.content import Content, ContentKind, detect_kind_from_content_type, hash_bytes, hash_text
+from podmaxxer.content import (
+    Content,
+    ContentKind,
+    detect_kind_from_content_type,
+    hash_bytes,
+    hash_text,
+)
 from podmaxxer.errors import FetchError, UnsupportedContentError
 
 
@@ -1087,7 +1104,11 @@ def test_audio_content_uses_sidecar_when_present(monkeypatch, tmp_path):
     content = Content(kind=ContentKind.AUDIO_VIDEO, source_uri="x", content_hash="h", path=media)
 
     monkeypatch.setattr(transcription_base, "find_sidecar_transcript", lambda path: "sidecar text")
-    monkeypatch.setattr(transcription_base, "whisper_transcribe", lambda path: (_ for _ in ()).throw(AssertionError("should not be called")))
+    monkeypatch.setattr(
+        transcription_base,
+        "whisper_transcribe",
+        lambda path: (_ for _ in ()).throw(AssertionError("should not be called")),
+    )
 
     text, source = transcription_base.get_transcript(content)
     assert text == "sidecar text"
@@ -1301,7 +1322,9 @@ def test_call_openai_raises_on_non_200():
 
 @responses.activate
 def test_call_openai_raises_on_unexpected_shape():
-    responses.add(responses.POST, OPENAI_CHAT_COMPLETIONS_URL, json={"unexpected": "shape"}, status=200)
+    responses.add(
+        responses.POST, OPENAI_CHAT_COMPLETIONS_URL, json={"unexpected": "shape"}, status=200
+    )
 
     with pytest.raises(SummarizationError):
         call_openai("summarize this", api_key="sk-test")
@@ -1575,13 +1598,19 @@ class FakeSource:
 
 def test_process_runs_all_stages_and_persists_state(monkeypatch, tmp_path):
     conn = connect(":memory:")
-    content = Content(kind=ContentKind.TEXT, source_uri="x", content_hash="h1", text="raw transcript")
+    content = Content(
+        kind=ContentKind.TEXT, source_uri="x", content_hash="h1", text="raw transcript"
+    )
     template_path = tmp_path / "tmpl.txt"
     template_path.write_text("Focus on X.", encoding="utf-8")
 
-    monkeypatch.setattr(pipeline, "summarize", lambda template, transcript, api_key: f"SUMMARY({transcript})")
+    monkeypatch.setattr(
+        pipeline, "summarize", lambda template, transcript, api_key: f"SUMMARY({transcript})"
+    )
 
-    result = pipeline.process(FakeSource(content), conn, api_key="sk-test", template_path=template_path)
+    result = pipeline.process(
+        FakeSource(content), conn, api_key="sk-test", template_path=template_path
+    )
 
     assert result == "SUMMARY(raw transcript)"
     assert conn.execute("SELECT COUNT(*) FROM items").fetchone()[0] == 1
@@ -1591,12 +1620,16 @@ def test_process_runs_all_stages_and_persists_state(monkeypatch, tmp_path):
 
 def test_process_skips_summarize_call_when_already_cached(monkeypatch, tmp_path):
     conn = connect(":memory:")
-    content = Content(kind=ContentKind.TEXT, source_uri="x", content_hash="h1", text="raw transcript")
+    content = Content(
+        kind=ContentKind.TEXT, source_uri="x", content_hash="h1", text="raw transcript"
+    )
     template_path = tmp_path / "tmpl.txt"
     template_path.write_text("Focus on X.", encoding="utf-8")
 
     calls = []
-    monkeypatch.setattr(pipeline, "summarize", lambda template, transcript, api_key: calls.append(1) or "SUMMARY")
+    monkeypatch.setattr(
+        pipeline, "summarize", lambda template, transcript, api_key: calls.append(1) or "SUMMARY"
+    )
 
     pipeline.process(FakeSource(content), conn, api_key="sk-test", template_path=template_path)
     pipeline.process(FakeSource(content), conn, api_key="sk-test", template_path=template_path)
@@ -1689,7 +1722,9 @@ def test_file_command_prints_summary(monkeypatch, tmp_path):
 
     monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
     monkeypatch.setattr(cli_module, "connect", lambda db_path: "fake-conn")
-    monkeypatch.setattr(cli_module, "process", lambda source, conn, api_key, template_path=None: "the summary")
+    monkeypatch.setattr(
+        cli_module, "process", lambda source, conn, api_key, template_path=None: "the summary"
+    )
 
     runner = CliRunner()
     result = runner.invoke(cli_module.cli, ["file", str(path)])
@@ -1732,7 +1767,9 @@ def test_pipeline_error_reported_on_stderr_with_nonzero_exit(monkeypatch, tmp_pa
 def test_url_command_invokes_pipeline(monkeypatch):
     monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
     monkeypatch.setattr(cli_module, "connect", lambda db_path: "fake-conn")
-    monkeypatch.setattr(cli_module, "process", lambda source, conn, api_key, template_path=None: "url summary")
+    monkeypatch.setattr(
+        cli_module, "process", lambda source, conn, api_key, template_path=None: "url summary"
+    )
 
     runner = CliRunner()
     result = runner.invoke(cli_module.cli, ["url", "https://example.com/a.mp3"])

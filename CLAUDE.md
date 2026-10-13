@@ -4,11 +4,34 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-Greenfield — the repository currently contains only a LICENSE file. No source code, dependencies,
-build tooling, or tests exist yet. There are no build/lint/test commands to document until the
-project scaffolding is created. When implementation begins, update this file with the actual
-commands (build, lint, test, run) and revise the architecture section below to match what was
-actually built.
+MVP implemented: a Click CLI supporting local-file and direct-URL input for audio/video and text
+content, transcript-or-Whisper transcription, template-based summarization via OpenAI, and
+SQLite-backed resumability. RSS feed and YouTube input are not yet implemented.
+
+### Commands
+
+```bash
+uv sync                 # install/sync dependencies
+uv run pytest            # run the test suite (faster-whisper is mocked, no real model download)
+uv run ruff check .      # lint
+uv run podmaxxer file <path> [--template <path>]
+uv run podmaxxer url <url> [--template <path>]
+```
+
+`uv run ruff check .` also runs automatically as a git pre-commit hook (wired into the
+beads-managed hook at `../.beads/hooks/pre-commit`, outside its marker block, guarded on
+`pyproject.toml` existing) — a commit with lint errors is rejected unless `git commit --no-verify`
+is used.
+
+### Architecture
+
+See `docs/superpowers/specs/2026-07-24-podmaxxer-mvp-design.md` for the full design and
+`docs/decisions/` for ADRs. In brief: input kinds implement a `Source.fetch() -> Content`
+protocol (`src/podmaxxer/sources/`); content flows through transcription
+(`src/podmaxxer/transcription/`) and summarization (`src/podmaxxer/summarize/`) stages;
+`src/podmaxxer/state/repository.py` is the sole place idempotency is tracked, keyed by a SHA-256
+content hash; `src/podmaxxer/pipeline.py` orchestrates stage order; `src/podmaxxer/cli.py` is the
+thin Click entry point.
 
 ## What Podmaxxer is
 
